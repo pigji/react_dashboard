@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 
 export const Wrapper = styled.div`
   display:flex;
-  padding-left:240px;
+  padding-left:${(props) => props.isOpen ? '240px' : '0' };
   transition: all 0.3s;
 `;
 

@@ -1,7 +1,9 @@
-import React, {useState, useEffect} from 'react'
+import React, {useState, useEffect, useContext} from 'react'
 import { AddBox } from '../styles/career.styles';
 import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import axios from 'axios';
+import { UserContext } from '../App';
+import CareerRow from './CareerRow';
 
 const CareerViewTable = () => {
   //데이터베이스에서 전달받은 데이터를 담을 상태 변수
@@ -19,12 +21,18 @@ const CareerViewTable = () => {
   //체크된 행의 id를 담을 배열, 처음에는 빈배열
   const [checkedRowId, setCheckedRowId] = useState([]);
 
+  //전역 상태를 불러옴
+  const {accessToken, setAccessToken} = useContext(UserContext);
+
   useEffect(() => {
     //CareerViewTable 컴포넌트가 화면에 보여질 때 실행되는 코드
     const fetchCareerList = async () => {
+      if(accessToken === null) return;
       try{
-        //get방식으로 api요청
-        let res = await axios.get('/api/career');
+        //get방식으로 api요청, 토큰을 보내줘야 한다
+        let res = await axios.get('/api/career',{
+          headers: {Authorization: `Bearer ${accessToken}`}
+        });
         setCareerList(res.data);//응답받은 데이터를 careerList상태에 저장
         //console.log(careerList)
       }catch(err){
@@ -32,7 +40,7 @@ const CareerViewTable = () => {
       }
     }
     fetchCareerList();//함수 호출
-  }, []);//컴포넌트가 처음 생성될때만 호출하기 위해 두번째 인자로 빈배열을 추가
+  }, [accessToken]);//컴포넌트가 처음 생성될때만 호출하기 위해 두번째 인자로 빈배열을 추가
 
   //입력한 값을 데이터베이스에 추가하는 함수
   const onAddCareer = async () => {
@@ -76,10 +84,14 @@ const CareerViewTable = () => {
       //api로 post요청으로 해당 데이터를 전달 합니다.
       let res = await axios.post('/api/career', {
         company, position, startDate, endDate
+      },{
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
       });
       //res.data에는 방금 추가한 '객체'가 들어있음
       alert('추가 완료!');
-      console.log(res.data);
+      //console.log(res.data);
       window.location.reload(); //새로고침
     }catch(err){
       console.log(err)
@@ -203,26 +215,13 @@ const CareerViewTable = () => {
         </thead>
         <tbody>
           {careerList.map((e) => 
-            <tr key={e.id}>
-              <td><input 
-                type="checkbox" 
-                checked={checkedRowId.includes(e.id)}
-                onChange={(event) => onSelect(event, e.id)}
-              /></td>
-              <td>{e.company}</td>
-              <td>{e.position}</td>
-              <td>
-                {e.start_date} - {e.end_date}
-              </td>
-              {/*게시글을 삭제할때 id값을 인자로 전달 */}
-              <td
-                onClick={() => onDeleteCareer(e.id)}
-                style={{
-                  display:'flex', justifyContent: 'center'
-                }}>
-                <DeleteSweepIcon />
-              </td>
-            </tr>
+            <CareerRow 
+              key={e.id}
+              career={e}
+              checkedRowId={checkedRowId}
+              onDeleteRow={onDeleteCareer}
+              onSelect={onSelect}
+            />
           )}
         </tbody>
       </AddBox>

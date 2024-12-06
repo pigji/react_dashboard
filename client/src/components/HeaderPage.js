@@ -7,9 +7,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { Popover } from '@mui/material';//팝업창
 
-const HeaderPage = () => {
+//layout컴포넌트에서 전달받은 상태를 props로 전달받음
+const HeaderPage = (props) => {
   //전역 state변수에 있는 토큰 값 가져오기
-  const {accessToken} = useContext(UserContext);
+  const {accessToken, setAccessToken} = useContext(UserContext);
   //useNavigate훅은 navigate변수에 할당하여 사용
   const navigate = useNavigate();
   //loggedInUser상태값을 객체로 변경
@@ -24,16 +25,21 @@ const HeaderPage = () => {
   //anchorEl이 null이 아닐경우 true가 되는 불리언 변수를 생성, 이 변수는 팝오버가 열려있는지 나타냅니다
   let open = Boolean(anchorEl);
 
+  //layout에서 만든 상태변수와 설정함수를 자식인 header로 객체분해 할당
+  const {isOpen, setIsOpen} = props;
+
   //header가 그려지면 db가서 로그인한 사람 정보 가져오기
   useEffect(() => {
     let tmp = async () => {
+      //accessToken이 null이면 아래 코드를 실행 안함
+      if(accessToken === null) return;
       try{
-        let res = await axios.get('/api/loggedInEmail',{headers: {Authorization: `Bearer ${localStorage.getItem('accessToken')}`}});
+        let res = await axios.get('/api/loggedInEmail',{headers: {Authorization: `Bearer ${accessToken}`}});
 
         //res.data에 로그인한 사람 이메일 주소가 들어있음
         //엔드 포인트 = '/api/users/:email' = :email로 ${res.data}가 전달됨
         let res2 = await axios.get(`/api/users/${res.data}`)
-        console.log(res2.data)
+        //console.log(res2.data)
         setLoggedInUser(res2.data)//전달받은 데이터 객체로 변경
       }catch(err){
         //로그인 시간이 만료되거나 로그인을 안한 경우
@@ -43,7 +49,19 @@ const HeaderPage = () => {
       }
     }
     tmp();
-  },[navigate]) //의존성으로 넣어줘야 함
+  },[accessToken]) //accessToken이 바뀌면 실행
+
+  const onLogout = () => {
+    //로그아웃 버튼이 클릭되면 토큰을 삭제
+    //localStorage에 저장된 토큰을 삭제하는 메서드
+    localStorage.removeItem('accessToken');
+
+    //전역 상태변수에 저장된 토큰도 삭제
+    setAccessToken(null);
+    //다시 로그인 페이지로 이동시킴
+    navigate('/login', {replace: true});
+  }
+
   return (
     <Header>
       <div>
@@ -65,9 +83,13 @@ const HeaderPage = () => {
         >
           <p>회원가입일 : {loggedInUser.created_date}</p>
           <p>마지막수정일 : {loggedInUser.updated_date}</p>
+          <button onClick={onLogout}>로그아웃</button>
         </Popover>
       </div>
-      <MenuOpenIcon />
+      {/*메뉴 버튼을 클릭하면 setIsOpen으로 isOpen상태를 변경하여 아이콘 모양을 변경 */}
+      <div onClick={() => {setIsOpen(!isOpen)}} style={{cursor:'pointer'}}>
+        {isOpen ? <MenuOpenIcon /> : <MenuIcon />}
+      </div>
     </Header>
   )
 }

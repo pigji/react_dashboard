@@ -5,6 +5,9 @@ import Signup from './auth/Signup';
 //import ExpressTest from './ExpressTest';
 import Login from './auth/Login';
 import Career from './pages/Career';
+import Overview from './pages/Overview';
+import Activity from './pages/Activity';
+import ActivityDetail from './pages/ActivityDetail';
 
 //(컴포넌트 전역에서 사용할 상태값을 생성)다른데서도 써야하니까 export 써주는거 잊지 말자
 export const UserContext = createContext();
@@ -17,7 +20,10 @@ function App() {
     <UserContext.Provider value={{accessToken, setAccessToken}}>
       <Router>
         <Routes>
-          <Route path="/" element={<Career />}/>
+          <Route path="/" element={<Overview />}/>
+          <Route path="/career" element={<Career />}/>
+          <Route path="/activity" element={<Activity />}/>
+          <Route path='/activity/:id' element={<ActivityDetail/>}/>
           {/*/login패스경로로 Login컴포넌트를 설정 */}
           <Route path="/login" element={<Login />}/>
           {/*Signup컴포넌트 설정 */}

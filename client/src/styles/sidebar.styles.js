@@ -4,8 +4,10 @@ export const Aside = styled.aside`
   width:240px;
   position:fixed;
   top:0; 
-  left:0; 
+  left:${(props) => props.isOpen ? '0' : '-100%'};
   bottom:0;
+  transition:0.3s;
+
   overflow-y: scroll;
   display:flex;
   flex-direction: column;
